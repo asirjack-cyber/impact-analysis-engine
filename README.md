@@ -81,8 +81,8 @@ GROQ_API_KEY=your_groq_api_key_here
 ## Installation & Setup
 
 1. Clone the repository
-git clone https://github.com/<your-username>/impact-dev-mapping.git
-cd impact-dev-mapping
+git clone https://github.com/asirjack-cyber/impact-analysis-engine
+cd impact-analysis-engine
 
 2. Install dependencies
 pip install -r requirements.txt
