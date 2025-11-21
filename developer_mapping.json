@@ -1,0 +1,107 @@
+{
+  "modules": {
+    "ModuleA": {
+      "name": "Transfer Service",
+      "features": {
+        "transfer_limit_check": {
+          "description": "Validates daily and per-transaction transfer limits.",
+          "code_locations": [
+            "services/TransferService.js:checkLimits()",
+            "utils/LimitValidator.js:validateDailyLimit()"
+          ],
+          "impacts": {
+            "upstream": [],
+            "downstream": ["ModuleB", "ModuleC", "ModuleD"]
+          }
+        },
+        "beneficiary_validation": {
+          "description": "Validates if beneficiary is active and approved.",
+          "code_locations": [
+            "services/BeneficiaryService.js:validateBeneficiary()"
+          ],
+          "impacts": {
+            "upstream": ["ModuleB"],
+            "downstream": ["ModuleC", "ModuleD"]
+          }
+        },
+        "transaction_posting_trigger": {
+          "description": "Triggers ledger posting workflow.",
+          "code_locations": [
+            "services/TransferService.js:initiateTransactionPosting()"
+          ],
+          "impacts": {
+            "upstream": [],
+            "downstream": ["ModuleC", "ModuleD"]
+          }
+        }
+      }
+    },
+
+    "ModuleB": {
+      "name": "Risk & Compliance",
+      "features": {
+        "fraud_risk_scoring": {
+          "description": "Generates fraud score based on amount, velocity and behaviour.",
+          "code_locations": [
+            "risk/FraudEngine.py:calculateRiskScore()"
+          ],
+          "depends_on": ["transfer_limit_check", "beneficiary_validation"]
+        },
+        "partner_validation": {
+          "description": "Validates partner system risk score before allowing transaction.",
+          "code_locations": [
+            "risk/PartnerCheck.py:validatePartner()"
+          ],
+          "depends_on": ["beneficiary_validation"]
+        }
+      }
+    },
+
+    "ModuleC": {
+      "name": "Core Banking System",
+      "features": {
+        "ledger_posting": {
+          "description": "Posts debit/credit entries to ledger.",
+          "code_locations": [
+            "core/LedgerPosting.java:postTransaction()"
+          ],
+          "depends_on": ["transfer_limit_check", "transaction_posting_trigger"]
+        },
+        "outbound_feeds": {
+          "description": "Sends transactions to external reporting systems.",
+          "code_locations": [
+            "core/OutboundFeedService.java:publishFeed()"
+          ],
+          "depends_on": ["ledger_posting"]
+        }
+      }
+    },
+
+    "ModuleD": {
+      "name": "Notification Service",
+      "features": {
+        "send_sms_notification": {
+          "description": "Sends SMS after successful transfer.",
+          "code_locations": [
+            "notify/SMSService.js:sendSMS()"
+          ],
+          "depends_on": ["transaction_posting_trigger"]
+        },
+        "send_push_notification": {
+          "description": "Sends push notifications to mobile app.",
+          "code_locations": [
+            "notify/PushService.js:sendPush()"
+          ],
+          "depends_on": ["transaction_posting_trigger"]
+        },
+        "audit_logging": {
+          "description": "Creates logs for account activity.",
+          "code_locations": [
+            "notify/AuditLogger.js:writeLog()"
+          ],
+          "depends_on": ["beneficiary_validation"]
+        }
+      }
+    }
+  }
+}
